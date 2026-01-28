@@ -21,6 +21,16 @@ def print_game_state(game: BlackjackGame, show_full_dealer: bool = False):
     player_state = state['player']
     
     print("\n" + "=" * 50)
+    
+    # Waiting phase - only show chips
+    if game.phase == GamePhase.WAITING:
+        print(f"💰 Chips: {player_state['chips']}")
+        print("=" * 50)
+        print(f"\n📢 {state['message']}")
+        print("-" * 50)
+        return
+    
+    # Active game - show full state
     print(f"💰 Chips: {player_state['chips']} | Current Bet: {game.player.current_bet}")
     print("=" * 50)
     
