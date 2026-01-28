@@ -39,6 +39,10 @@ class BlackjackGame:
         if self.phase != GamePhase.WAITING:
             return {"success": False, "message": "Cannot bet now. Finish current round first."}
         
+        # Reset hands FIRST, then place bet, then deal
+        self.player.reset_hand()
+        self.dealer.reset_hand()
+        
         if not self.player.place_bet(amount):
             return {"success": False, "message": f"Invalid bet. You have {self.player.chips} chips."}
         
@@ -63,11 +67,6 @@ class BlackjackGame:
         """Deal initial 2 cards each to player and dealer."""
         self.phase = GamePhase.DEALING
         self.result = None
-        
-        # Reset hands
-        self.player.reset_hand()
-        self.dealer.reset_hand()
-        # Keep the bet that was already placed
         
         # Deal alternating: player, dealer, player, dealer
         self.player.add_card(self.deck.draw())
