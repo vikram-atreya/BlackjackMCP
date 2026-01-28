@@ -1,6 +1,7 @@
 """
 Multi-player command-line interface for Blackjack.
 Supports multiple players with persistent chip tracking.
+Includes AI advisor for strategy recommendations.
 """
 import sys
 import os
@@ -9,6 +10,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from game_multiplayer import MultiPlayerBlackjack, GamePhase
+from ai_advisor import get_advisor, get_advice_for_game_state
 
 
 def clear_screen():
@@ -147,12 +149,13 @@ def get_valid_bet(player_name: str, max_chips: int) -> int:
             print("Please enter a valid number")
 
 
-def get_player_action(player_name: str, available_actions: list) -> str:
+def get_player_action(player_name: str, available_actions: list, game=None) -> str:
     """Get player's action choice."""
     action_map = {
         'h': 'hit',
         's': 'stand',
         'd': 'double_down',
+        'a': 'advice',
         'q': 'quit'
     }
     
@@ -163,6 +166,7 @@ def get_player_action(player_name: str, available_actions: list) -> str:
         print("  [S] Stand")
     if 'double_down' in available_actions:
         print("  [D] Double Down")
+    print("  [A] 🤖 Ask AI Advisor")
     print("  [Q] Quit")
     
     while True:
@@ -171,6 +175,15 @@ def get_player_action(player_name: str, available_actions: list) -> str:
             action = action_map[choice]
             if action == 'quit':
                 return 'quit'
+            if action == 'advice':
+                # Get AI advice
+                if game:
+                    print("\n🤖 AI Advisor says:")
+                    advice = get_advice_for_game_state(game.get_state(), player_name)
+                    print(f"   {advice}")
+                else:
+                    print("\n🤖 AI Advisor unavailable.")
+                continue  # Ask for action again after showing advice
             if action in available_actions:
                 return action
         print("Invalid choice. Try again.")
@@ -200,6 +213,13 @@ def main():
     print("=" * 60)
     print("\nEach new player starts with 100 chips.")
     print("Returning players keep their chips!")
+    
+    # Check AI advisor status
+    advisor = get_advisor()
+    if advisor.is_available():
+        print("🤖 AI Advisor: ENABLED (press [A] during your turn for advice)")
+    else:
+        print("🤖 AI Advisor: Using basic strategy (set OPENAI_API_KEY for LLM advice)")
     
     game = MultiPlayerBlackjack(num_decks=6)
     
@@ -252,7 +272,7 @@ def main():
             current = game.current_player
             if current:
                 actions = game.get_available_actions(current.name)
-                action = get_player_action(current.name, actions)
+                action = get_player_action(current.name, actions, game)
                 
                 if action == 'quit':
                     print("\nThanks for playing! 👋")
