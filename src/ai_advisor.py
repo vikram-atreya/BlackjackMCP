@@ -59,8 +59,8 @@ Be concise. Example: "STAND: 18 is strong, dealer showing 6 likely busts."
         
         # Check for Azure OpenAI first
         azure_key = api_key or os.getenv("AZURE_OPENAI_API_KEY")
-        azure_endpoint = azure_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT")
-        azure_deployment = azure_deployment or os.getenv("AZURE_OPENAI_DEPLOYMENT")
+        azure_endpoint = azure_endpoint or os.getenv("AZURE_OPENAI_ENDPOINT", "https://vikramatagenteastus2.openai.azure.com/")
+        azure_deployment = azure_deployment or os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-5.2-chat")
         
         if azure_key and azure_endpoint:
             try:
@@ -72,7 +72,7 @@ Be concise. Example: "STAND: 18 is strong, dealer showing 6 likely busts."
                 self.model = azure_deployment or "gpt-4o-mini"  # Use deployment name
                 self.use_azure = True
                 self.enabled = True
-                print(f"   Using Azure OpenAI: {azure_endpoint}")
+                # print(f"   Using Azure OpenAI: {azure_endpoint}")
             except Exception as e:
                 print(f"Warning: Could not initialize Azure OpenAI client: {e}")
         else:
@@ -123,10 +123,32 @@ What should I do?"""
                     {"role": "system", "content": self.SYSTEM_PROMPT},
                     {"role": "user", "content": user_message}
                 ],
-                max_tokens=50,
-                temperature=0.3  # Low temp for consistent strategy
+                max_completion_tokens=15000
             )
-            return response.choices[0].message.content.strip()
+            
+            # Debug: print the full response structure
+            print(f"   [DEBUG] Response: {response}")
+            
+            # Handle different response structures
+            if response.choices and len(response.choices) > 0:
+                choice = response.choices[0]
+                print(f"   [DEBUG] Choice: {choice}")
+                
+                # Try different ways to get content
+                content = None
+                if hasattr(choice, 'message') and choice.message:
+                    content = choice.message.content
+                elif hasattr(choice, 'text'):
+                    content = choice.text
+                
+                print(f"   [DEBUG] Content: {content}")
+                
+                if content:
+                    return content.strip()
+            
+            # If no content, fall back to basic strategy
+            print("   [DEBUG] No content found, using fallback")
+            return self._fallback_basic_strategy(player_score, dealer_visible_score, can_double)
         except Exception as e:
             print(f"AI API error: {e}")
             return self._fallback_basic_strategy(player_score, dealer_visible_score, can_double)
