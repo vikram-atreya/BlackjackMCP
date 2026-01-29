@@ -101,11 +101,3 @@ Edit `player.py` to handle split hands, update `game.py` with split logic.
 
 ### Add Insurance
 Add insurance option when dealer shows Ace in `game.py`.
-
-### Multi-player
-Modify `game.py` to track multiple Player instances.
-
-## License
-
-MIT
-Trying to make a MCP server for playing blackjack with an AI dealer and AI players
