@@ -1,18 +1,32 @@
 # 🃏 Blackjack MCP Server
 
-A Model Context Protocol (MCP) server that implements a Blackjack game. Play manually via CLI or connect an AI agent to play through MCP tools.
+A Model Context Protocol (MCP) server that implements a multiplayer Blackjack game. Play against AI opponents that use LLM for decisions, or connect VS Code Copilot to play through MCP tools.
+
+## Features
+
+- 🎮 **Multiplayer** - Up to 6 players at a table
+- 🤖 **AI Opponents** - Bots that use Azure OpenAI/LLM for decisions
+- 🔌 **MCP Protocol** - Connect AI assistants like VS Code Copilot or Claude
+- 🎯 **Turn-by-turn** - Clear game flow with state tracking
 
 ## Architecture
 
 ```
 BlackjackMCP/
 ├── src/
-│   ├── server.py      # MCP server - exposes game as tools
-│   ├── game.py        # Core game logic & state machine
-│   ├── player.py      # Player class - hand, betting, actions
-│   ├── dealer.py      # Dealer class - automated dealer logic
-│   ├── deck.py        # Card and Deck classes
-│   └── cli.py         # Manual play via command line
+│   ├── server.py           # MCP server - exposes game as tools
+│   ├── game.py             # Single-player game logic
+│   ├── game_multiplayer.py # Multiplayer game logic
+│   ├── player.py           # Player class - hand, betting
+│   ├── dealer.py           # Dealer class - automated logic
+│   ├── deck.py             # Card and Deck classes
+│   ├── ai_player.py        # AI player using LLM for decisions
+│   ├── ai_advisor.py       # AI advisor for human players
+│   ├── cli.py              # Single-player CLI
+│   ├── cli_multiplayer.py  # Multiplayer CLI
+│   └── cli_with_ai.py      # Human vs AI CLI
+├── .vscode/
+│   └── mcp.json            # VS Code Copilot MCP config
 ├── requirements.txt
 └── README.md
 ```
@@ -25,79 +39,107 @@ BlackjackMCP/
 pip install -r requirements.txt
 ```
 
-### 2. Play Manually (CLI)
+### 2. Set API Key (for AI features)
 
-Test the game logic with manual inputs:
+```powershell
+# PowerShell
+$env:AZURE_OPENAI_API_KEY = "your-api-key"
+
+# Or Bash
+export AZURE_OPENAI_API_KEY="your-api-key"
+```
+
+### 3. Play via CLI
 
 ```bash
 cd src
-python cli.py
+python cli_with_ai.py      # Human vs AI opponents
+python cli_multiplayer.py  # Multiplayer (humans only)
+python cli.py              # Single player
 ```
 
-### 3. Run MCP Server
+## Using with VS Code Copilot (MCP)
 
-Start the MCP server for AI agents:
+### Setup
 
-```bash
-cd src
-python server.py
+1. Open this workspace in VS Code
+2. The `.vscode/mcp.json` is already configured
+3. Set your `AZURE_OPENAI_API_KEY` environment variable
+4. Reload VS Code window
+
+### Playing via Copilot
+
+Just chat with Copilot:
+
 ```
+"Create a blackjack game with me and one AI opponent"
+"I'll bet 20 chips"
+"Hit me"
+"Let the AI play its turn"
+```
+
+Copilot will use the MCP tools automatically!
 
 ## MCP Tools Available
 
 | Tool | Description |
 |------|-------------|
-| `get_game_state()` | Get current game state, hands, scores, available actions |
-| `place_bet(amount)` | Start a round by placing a bet |
-| `hit()` | Draw another card |
-| `stand()` | Keep current hand, dealer plays |
-| `double_down()` | Double bet, take one card, stand |
-| `new_round()` | Start new round after completion |
-| `reset_game(chips)` | Reset game with fresh chips |
-| `get_rules()` | Get game rules explanation |
+| `create_game()` | Create a new game table |
+| `add_player(name, chips)` | Add a human player |
+| `add_ai_player(name, chips)` | Add an AI opponent |
+| `start_game()` | Begin the game (betting phase) |
+| `place_bet(player, amount)` | Player places their bet |
+| `hit(player)` | Draw another card |
+| `stand(player)` | Keep current hand |
+| `double_down(player)` | Double bet, take one card |
+| `ai_play_turn()` | Let AI player decide (uses LLM) |
+| `get_game_state()` | Get full game state |
+| `new_round()` | Start next round |
+| `end_game()` | End game, show standings |
+| `get_rules()` | Get game rules |
+
+## Game Flow
+
+```
+1. create_game()           → Table created
+2. add_player("Alice")     → Alice joins with 100 chips
+3. add_ai_player()         → Bot-Alpha joins
+4. start_game()            → Betting phase begins
+5. place_bet("Alice", 20)  → Alice bets 20
+6. place_bet("Bot-Alpha", 10) → Bot bets 10, cards dealt!
+7. hit("Alice")            → Alice draws a card
+8. stand("Alice")          → Alice ends turn
+9. ai_play_turn()          → Bot-Alpha decides via LLM
+10. (dealer plays automatically when all done)
+11. get_game_state()       → See results
+12. new_round()            → Play again!
+```
 
 ## Game Rules
 
-- **Objective**: Get closer to 21 than the dealer without going over
-- **Card Values**: 2-10 = face value, J/Q/K = 10, A = 11 or 1
-- **Blackjack**: Ace + 10-value card = 3:2 payout
-- **Dealer**: Must hit on 16 or less, stand on 17+
+- **Objective**: Get closer to 21 than dealer without busting
+- **Card Values**: 2-10 = face value, J/Q/K = 10, Ace = 11 or 1
+- **Blackjack**: Ace + 10-value = 3:2 payout
+- **Dealer**: Must hit on ≤16, stand on ≥17
 
-## Connecting an AI Agent
+## Configuration
 
-Configure your AI agent (Claude, etc.) to use this MCP server:
+Edit `.vscode/mcp.json` to customize:
 
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "blackjack": {
       "command": "python",
-      "args": ["path/to/BlackjackMCP/src/server.py"]
+      "args": ["${workspaceFolder}/src/server.py"],
+      "env": {
+        "AZURE_OPENAI_API_KEY": "${env:AZURE_OPENAI_API_KEY}",
+        "AZURE_OPENAI_ENDPOINT": "https://your-endpoint.openai.azure.com/"
+      }
     }
   }
 }
 ```
-
-The AI can then call tools like:
-1. `get_game_state()` - See current state
-2. `place_bet(100)` - Start with 100 chip bet
-3. `hit()` or `stand()` - Make decisions
-4. `new_round()` - Play again
-
-## Example Game Flow
-
-```
-1. get_game_state()        → See you have 1000 chips, phase: "waiting"
-2. place_bet(100)          → Cards dealt, your hand: "K♠, 7♥" (17)
-3. stand()                 → Dealer plays, reveals "10♦, 6♣, 5♠" (21)
-4. get_game_state()        → Result: dealer_win, chips: 900
-5. new_round()             → Ready for next bet
-```
-
-## Extending the Game
-
-### Add Split functionality
-Edit `player.py` to handle split hands, update `game.py` with split logic.
 
 ### Add Insurance
 Add insurance option when dealer shows Ace in `game.py`.

@@ -1,0 +1,27 @@
+{
+  "servers": {
+    "blackjack": {
+      "command": "python",
+      "args": ["${workspaceFolder}/src/server.py"],
+      "env": {
+        "AZURE_OPENAI_API_KEY": "${env:AZURE_OPENAI_API_KEY}",
+        "AZURE_OPENAI_ENDPOINT": "https://vikramatagenteastus2.openai.azure.com/"
+      },
+      "alwaysAllow": [
+        "create_game",
+        "add_player", 
+        "add_ai_player",
+        "start_game",
+        "place_bet",
+        "hit",
+        "stand",
+        "double_down",
+        "ai_play_turn",
+        "new_round",
+        "end_game",
+        "get_game_state",
+        "get_rules"
+      ]
+    }
+  }
+}
