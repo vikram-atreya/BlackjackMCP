@@ -141,5 +141,31 @@ Edit `.vscode/mcp.json` to customize:
 }
 ```
 
-### Add Insurance
-Add insurance option when dealer shows Ace in `game.py`.
+## Docker
+
+### Build and Run
+
+```bash
+# Build the image
+docker build -t blackjack-mcp .
+
+# Run CLI game
+docker compose --profile cli run --rm blackjack-cli
+
+# Run MCP server (for development)
+docker compose up blackjack-mcp
+```
+
+### Environment Setup
+
+```bash
+# Copy example env file
+cp .env.example .env
+
+# Edit with your API key
+notepad .env
+```
+
+## Learn More
+
+See [example.md](example.md) for a complete game walkthrough with VS Code Copilot.

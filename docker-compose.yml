@@ -1,0 +1,25 @@
+services:
+  # MCP Server - for AI integration
+  blackjack-mcp:
+    build: .
+    container_name: blackjack-mcp
+    environment:
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-https://vikramatagenteastus2.openai.azure.com/}
+    stdin_open: true  # Required for MCP stdio communication
+    tty: true
+    volumes:
+      - ./src:/app/src  # Mount source for development
+
+  # CLI Game - for manual play
+  blackjack-cli:
+    build: .
+    container_name: blackjack-cli
+    environment:
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-https://vikramatagenteastus2.openai.azure.com/}
+    stdin_open: true
+    tty: true
+    command: python src/cli_with_ai.py
+    profiles:
+      - cli  # Only starts with: docker compose --profile cli up
